@@ -36,17 +36,33 @@ Tested on real hardware: one HL-DT-ST BDDVDRW UH12NS40 with a CD-R (measure and 
 
 ## Install
 
-Windows 10 or 11 and Python 3.11 or newer.
+You need Windows 10 or 11 and these:
+
+| What | Where | Notes |
+| --- | --- | --- |
+| Python 3.11 or newer | https://www.python.org/downloads/ | Tick "Add python.exe to PATH" when installing. |
+| Git | https://git-scm.com/download/win | `setup.bat` uses it to fetch disc-probe. Optional if you extract disc-probe's ZIP yourself. |
+| DiscImageStudio | https://github.com/JiaFeiMiao-K-Cat/DiscImageStudio/releases/latest | The program DiscTuner installs its presets into. |
+| A burner | see [Will it work with my drive?](#will-it-work-with-my-drive) | |
+
+Then run:
 
 ```
-git clone https://github.com/Ashley-QwQ/disc-probe
-git clone <this repository> DiscTuner
+git clone https://github.com/Fireball122/DiscTuner
 cd DiscTuner
+setup.bat
+run_disctuner.bat
+```
+
+`setup.bat` checks the Python version, installs the packages DiscTuner needs (disc-probe uses the same ones), clones disc-probe into the folder next to DiscTuner, runs disc-probe's self-test, and says whether DiscImageStudio is installed. It is safe to run again. `run_disctuner.bat` starts DiscTuner without a console window.
+
+To do it by hand instead:
+
+```
 python -m pip install -r requirements.txt
+git clone https://github.com/Ashley-QwQ/disc-probe ../disc-probe
 python -m disctuner
 ```
-
-`run_disctuner.bat` starts it without a console window.
 
 DiscTuner looks for disc-probe next to its own folder, in `Downloads`, `Documents` and your home folder, and in `DISCTUNER_DISCPROBE`. If it finds nothing, the app offers a **Locate disc-probe** button and remembers your choice. DiscImageStudio is found the same way (`DISCTUNER_DIS_EXE`, `Downloads`, `%LOCALAPPDATA%\Programs\DiscImageStudio`) and asked for once if missing.
 
