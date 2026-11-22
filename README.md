@@ -45,14 +45,12 @@ You need Windows 10 or 11 and these:
 | DiscImageStudio | https://github.com/JiaFeiMiao-K-Cat/DiscImageStudio/releases/latest | The program DiscTuner installs its presets into. |
 | A burner | see [Will it work with my drive?](#will-it-work-with-my-drive) | |
 
-Then run:
+Get DiscTuner in either of two ways:
 
-```
-git clone https://github.com/Fireball122/DiscTuner
-cd DiscTuner
-setup.bat
-run_disctuner.bat
-```
+1. Download `DiscTuner-v2.0.0.zip` from the [latest release](https://github.com/Fireball122/DiscTuner/releases/latest) and unzip it.
+2. Or clone it: `git clone https://github.com/Fireball122/DiscTuner`
+
+Then, in the DiscTuner folder, double-click `setup.bat`. When it finishes, double-click `run_disctuner.bat`.
 
 `setup.bat` checks the Python version, installs the packages DiscTuner needs (disc-probe uses the same ones), clones disc-probe into the folder next to DiscTuner, runs disc-probe's self-test, and says whether DiscImageStudio is installed. It is safe to run again. `run_disctuner.bat` starts DiscTuner without a console window.
 
