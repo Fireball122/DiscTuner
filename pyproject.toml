@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "disctuner"
+dynamic = ["version"]
+description = "One-disc calibration of blank CD, DVD and Blu-ray discs for DiscImageStudio, using disc-probe"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+dependencies = [
+    "customtkinter>=5.2",
+    "pillow>=10",
+    "numpy",
+    "scipy",  # disc-probe's own dependencies; it runs under the same Python
+]
+classifiers = [
+    "Operating System :: Microsoft :: Windows",
+    "Environment :: Win32 (MS Windows)",
+    "Programming Language :: Python :: 3",
+]
+
+[project.gui-scripts]
+disctuner = "disctuner.__main__:run"
+
+[tool.setuptools.dynamic]
+version = { attr = "disctuner.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["disctuner*"]
+
+[tool.setuptools.package-data]
+disctuner = ["scripts/*.ps1"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "B", "UP", "SIM", "I"]
+ignore = ["E501"]
