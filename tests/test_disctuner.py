@@ -26,8 +26,8 @@ from disctuner.calibration import (
 from disctuner.disc import DiscInfo, DiscState, parse_info
 from disctuner.drives import normalize_letter
 from disctuner.media import FAMILIES
-from disctuner.project import GEOMETRY_KEYS, ProjectError, write_project
 from disctuner.procs import Cancelled, CancelToken, python_exe, stream
+from disctuner.project import GEOMETRY_KEYS, ProjectError, write_project
 
 
 def report(code=0x1B, status="empty", blank=True, free=2295104, sense=None, cap_last=0, adip=("SONY", "D21", "0"), atip=None):
@@ -213,6 +213,7 @@ class Pipeline(unittest.TestCase):
             patched = {
                 "read_disc_info": lambda *_: drive_after or DiscInfo("E:", DiscState.WRITTEN, sectors=disc.sectors),
                 "SETTLE_SECONDS": 1,
+                "write_project": lambda *_args: None,  # the real call would read the user's preset file
                 "ERASE_SCRIPT": erase,
             }
             original = {name: getattr(calibration, name) for name in patched}
@@ -294,7 +295,7 @@ class CdProject(unittest.TestCase):
         self._tmp.cleanup()
 
     def test_project_geometry_is_the_installed_preset(self):
-        path = write_project("atip-97-26-66-calibrated", "CD-R (ATIP 97:26:66, Calibrated)",
+        path = write_project("cd", "atip-97-26-66-calibrated", "CD-R (ATIP 97:26:66, Calibrated)",
                              folder=self.folder / "projects", presets_file=self.presets)
         doc = json.loads(path.read_text(encoding="utf-8"))
         self.assertEqual(doc["discFamily"], "cd")
@@ -305,7 +306,43 @@ class CdProject(unittest.TestCase):
 
     def test_unknown_preset_is_an_error_not_an_empty_project(self):
         with self.assertRaises(ProjectError):
-            write_project("no-such-preset", "x", folder=self.folder, presets_file=self.presets)
+            write_project("cd", "no-such-preset", "x", folder=self.folder, presets_file=self.presets)
+        self.assertEqual(list(self.folder.glob("*.discproj")), [])
+
+
+class DvdProject(unittest.TestCase):
+    """DVD presets name the sector count totalSectors; the project wants sectors."""
+
+    PRESET = {
+        "id": "dvd-calibrated", "displayName": "DVD+R (Calibrated)",
+        "totalSectors": 2295104, "innerRadiusMm": 23.93, "outerRadiusMm": 57.96, "channelBitLengthNm": 133.3,
+        "pitchLinear": -4.1e-08, "pitchQuadratic": 9.4e-08, "pitchCubic": -6.5e-08,
+    }
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.folder = Path(self._tmp.name)
+        self.presets = self.folder / "disc-presets.json"
+        self.presets.write_text(json.dumps({"cdPresets": [], "dvdPresets": [self.PRESET]}), encoding="utf-8")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_project_geometry_is_the_installed_preset(self):
+        path = write_project("dvd", "dvd-calibrated", "DVD+R (Calibrated)",
+                             folder=self.folder / "projects", presets_file=self.presets)
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(doc["discFamily"], "dvd")
+        self.assertEqual(doc["geometry"], {
+            "innerRadiusMm": 23.93, "outerRadiusMm": 57.96, "sectors": 2295104,
+            "pitchLinear": -4.1e-08, "pitchQuadratic": 9.4e-08, "pitchCubic": -6.5e-08,
+        })
+        self.assertFalse(doc["outputs"]["writeCue"])
+        self.assertEqual(doc["outputs"]["volumeLabel"], "DISC_IMAGE")
+
+    def test_blu_ray_is_refused_rather_than_guessed(self):
+        with self.assertRaises(ProjectError):
+            write_project("bd", "user-custom-bd", "x", folder=self.folder, presets_file=self.presets)
         self.assertEqual(list(self.folder.glob("*.discproj")), [])
 
 

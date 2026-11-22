@@ -18,8 +18,8 @@ from pathlib import Path
 
 from .disc import DiscInfo, DiscState, ProbeError, read_disc_info
 from .media import SECTOR_BYTES, Family
-from .project import ProjectError, write_project
 from .procs import CancelToken, powershell, python_exe, stream, tool_env
+from .project import ProjectError, supports, write_project
 
 SETTLE_SECONDS = 25  # the drive needs to spin the reloaded disc up before timing is steady
 RELOAD_TIMEOUT_SECONDS = 180
@@ -381,9 +381,9 @@ class Calibrator:
         self._done(Stage.INSTALL)
 
         project = None
-        if family.key == "cd":
+        if supports(family.key):
             try:
-                project = write_project(preset_id, name)
+                project = write_project(family.key, preset_id, name)
             except ProjectError as exc:
                 raise CalibrationError(f"The preset was added, but the project file was not. {exc}") from exc
 
