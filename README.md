@@ -68,9 +68,9 @@ DiscTuner looks for disc-probe next to its own folder, in `Downloads`, `Document
 
 1. Put one blank disc from the spindle in the drive.
 2. Press **Calibrate**. Don't touch the tray until it finishes.
-3. Restart DiscImageStudio and pick the new preset, named `<disc> (<manufacturer code>, Calibrated)`.
+3. Open the project DiscTuner saved: in DiscImageStudio choose **File > Open** and pick `Documents\DiscImageStudio Projects\<disc> (<manufacturer code>, Calibrated).discproj`. Colons in the name become underscores in the file name. Then add your image. The calibrated preset is also in the disc preset list after a restart.
 
-Calibrate once per spindle or batch. Running it again for the same disc type replaces that preset; DiscImageStudio's previous preset file is backed up first by disc-probe.
+Calibrate once per spindle or batch. Running it again for the same disc type replaces that preset and project file. DiscImageStudio's previous preset file is backed up first by disc-probe. Only CD calibrations write a project; DVD and Blu-ray calibrations still only add a preset.
 
 Burning writes a disc that can't be rewritten, and erasing wipes a rewritable one. DiscTuner asks before erasing and warns before you cancel mid-burn. You use it at your own risk.
 

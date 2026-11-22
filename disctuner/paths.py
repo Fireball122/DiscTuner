@@ -89,3 +89,15 @@ def find_dis_exe() -> Path | None:
             if matches:
                 return matches[0]
     return None
+
+
+def dis_presets_file() -> Path:
+    """DiscImageStudio's user preset file, which the preset install writes to."""
+    local = os.environ.get("LOCALAPPDATA")
+    root = Path(local) if local else Path.home() / "AppData" / "Local"
+    return root / "DiscImageStudio" / "disc-presets.json"
+
+
+def dis_projects_dir() -> Path:
+    """The folder DiscImageStudio keeps its projects in; File > Open starts here."""
+    return Path.home() / "Documents" / "DiscImageStudio Projects"

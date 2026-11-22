@@ -548,7 +548,11 @@ class App(ctk.CTk):
         if isinstance(outcome, CalibrationResult):
             self._result = outcome
             self._phase = Phase.DONE
-            self._notice = "\n".join(("Added to DiscImageStudio. Choose it in the disc preset list.", *outcome.notes))
+            lines = ["Added to DiscImageStudio's preset list (restart it if the list is open)."]
+            if outcome.project:
+                lines.append(f"Project saved: {outcome.project}")
+                lines.append("In DiscImageStudio, choose File > Open, pick that file, then add your image.")
+            self._notice = "\n".join((*lines, *outcome.notes))
             self._notice_is_error = False
             self._log(f"Installed preset {outcome.preset_id}")
         elif isinstance(outcome, Cancelled):

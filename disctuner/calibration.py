@@ -18,6 +18,7 @@ from pathlib import Path
 
 from .disc import DiscInfo, DiscState, ProbeError, read_disc_info
 from .media import SECTOR_BYTES, Family
+from .project import ProjectError, write_project
 from .procs import CancelToken, powershell, python_exe, stream, tool_env
 
 SETTLE_SECONDS = 25  # the drive needs to spin the reloaded disc up before timing is steady
@@ -77,6 +78,7 @@ class CalibrationResult:
     preset_name: str
     preset_id: str
     notes: tuple[str, ...] = ()
+    project: Path | None = None
 
 
 class CalibrationError(RuntimeError):
@@ -378,10 +380,17 @@ class Calibrator:
             raise CalibrationError(f"DiscImageStudio's preset could not be written.\n{result.tail()}")
         self._done(Stage.INSTALL)
 
+        project = None
+        if family.key == "cd":
+            try:
+                project = write_project(preset_id, name)
+            except ProjectError as exc:
+                raise CalibrationError(f"The preset was added, but the project file was not. {exc}") from exc
+
         notes = [family.note] if family.note else []
         if fit.clv:
             notes.append("Only the inner radius was timed; the pitch in the preset is nominal.")
-        return CalibrationResult(fit, fit.points or count, name, preset_id, tuple(notes))
+        return CalibrationResult(fit, fit.points or count, name, preset_id, tuple(notes), project)
 
     # -- helpers --------------------------------------------------------------------------
 

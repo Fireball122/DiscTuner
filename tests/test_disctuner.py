@@ -1,5 +1,6 @@
 """Run with:  python -m unittest discover -s tests"""
 
+import json
 import os
 import sys
 import tempfile
@@ -25,6 +26,7 @@ from disctuner.calibration import (
 from disctuner.disc import DiscInfo, DiscState, parse_info
 from disctuner.drives import normalize_letter
 from disctuner.media import FAMILIES
+from disctuner.project import GEOMETRY_KEYS, ProjectError, write_project
 from disctuner.procs import Cancelled, CancelToken, python_exe, stream
 
 
@@ -270,6 +272,41 @@ class Pipeline(unittest.TestCase):
         ):
             with self.assertRaises(CalibrationError):
                 calibrator.run(disc, CancelToken())
+
+
+class CdProject(unittest.TestCase):
+    """The project is what anyone imports, so it must carry the installed preset's geometry."""
+
+    PRESET = {
+        "id": "atip-97-26-66-calibrated", "displayName": "CD-R (ATIP 97:26:66, Calibrated)",
+        "sectors": 359846, "innerRadiusMm": 25.27, "outerRadiusMm": 58.28,
+        "pitchLinear": 2.3e-08, "pitchQuadratic": -5.6e-08, "pitchCubic": 4.3e-08,
+        "linearVelocityMmPerSecond": 1200,
+    }
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.folder = Path(self._tmp.name)
+        self.presets = self.folder / "disc-presets.json"
+        self.presets.write_text(json.dumps({"cdPresets": [self.PRESET], "dvdPresets": []}), encoding="utf-8")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_project_geometry_is_the_installed_preset(self):
+        path = write_project("atip-97-26-66-calibrated", "CD-R (ATIP 97:26:66, Calibrated)",
+                             folder=self.folder / "projects", presets_file=self.presets)
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(doc["discFamily"], "cd")
+        self.assertEqual(doc["schemaVersion"], 2)
+        self.assertEqual(doc["geometry"], {k: self.PRESET[k] for k in GEOMETRY_KEYS})
+        self.assertEqual(doc["layers"], [])
+        self.assertEqual(path.name, "CD-R (ATIP 97_26_66, Calibrated).discproj")
+
+    def test_unknown_preset_is_an_error_not_an_empty_project(self):
+        with self.assertRaises(ProjectError):
+            write_project("no-such-preset", "x", folder=self.folder, presets_file=self.presets)
+        self.assertEqual(list(self.folder.glob("*.discproj")), [])
 
 
 if __name__ == "__main__":
