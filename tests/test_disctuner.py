@@ -27,7 +27,7 @@ from disctuner.disc import DiscInfo, DiscState, parse_info
 from disctuner.drives import normalize_letter
 from disctuner.media import FAMILIES
 from disctuner.procs import Cancelled, CancelToken, python_exe, stream
-from disctuner.project import GEOMETRY_KEYS, ProjectError, write_project
+from disctuner.project import ProjectError, write_project
 
 
 def report(code=0x1B, status="empty", blank=True, free=2295104, sense=None, cap_last=0, adip=("SONY", "D21", "0"), atip=None):
@@ -300,7 +300,11 @@ class CdProject(unittest.TestCase):
         doc = json.loads(path.read_text(encoding="utf-8"))
         self.assertEqual(doc["discFamily"], "cd")
         self.assertEqual(doc["schemaVersion"], 2)
-        self.assertEqual(doc["geometry"], {k: self.PRESET[k] for k in GEOMETRY_KEYS})
+        self.assertEqual(doc["geometry"], {
+            "innerRadiusMm": 25.27, "outerRadiusMm": 58.28, "sectors": 359846,
+            "pitchLinear": 2.3e-08, "pitchQuadratic": -5.6e-08, "pitchCubic": 4.3e-08,
+            "usableSectors": 359844,  # the app's CD default: two sectors short of the total
+        })
         self.assertEqual(doc["layers"], [])
         self.assertEqual(path.name, "CD-R (ATIP 97_26_66, Calibrated).discproj")
 
@@ -336,14 +340,62 @@ class DvdProject(unittest.TestCase):
         self.assertEqual(doc["geometry"], {
             "innerRadiusMm": 23.93, "outerRadiusMm": 57.96, "sectors": 2295104,
             "pitchLinear": -4.1e-08, "pitchQuadratic": 9.4e-08, "pitchCubic": -6.5e-08,
+            "usableSectors": 2294496,  # the app's own DVD project: (total - 608) rounded down to 16
         })
         self.assertFalse(doc["outputs"]["writeCue"])
         self.assertEqual(doc["outputs"]["volumeLabel"], "DISC_IMAGE")
 
-    def test_blu_ray_is_refused_rather_than_guessed(self):
-        with self.assertRaises(ProjectError):
-            write_project("bd", "user-custom-bd", "x", folder=self.folder, presets_file=self.presets)
-        self.assertEqual(list(self.folder.glob("*.discproj")), [])
+    def test_a_valid_usable_sectors_in_the_preset_wins_and_an_invalid_one_does_not(self):
+        for given, expected in ((2294000, 2294000), (2294001, 2294496), (9999999, 2294496)):
+            presets = self.folder / f"p{given}.json"
+            presets.write_text(json.dumps({"dvdPresets": [{**self.PRESET, "usableSectors": given}]}), encoding="utf-8")
+            path = write_project("dvd", "dvd-calibrated", "x", folder=self.folder / "projects", presets_file=presets)
+            self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["geometry"]["usableSectors"], expected)
+
+
+class BluRayProject(unittest.TestCase):
+    """A Blu-ray preset has no pitch; the project writes zeros and a bluRay block, as the app does."""
+
+    PRESET = {
+        "id": "bd-r-calibrated", "displayName": "BD-R (Calibrated)", "totalSectors": 12219392,
+        "innerRadiusMm": 24.65, "outerRadiusMm": 57.7, "invertMapping": True, "usableSectors": 12218368,
+    }
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.folder = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _write(self, preset):
+        presets = self.folder / "disc-presets.json"
+        presets.write_text(json.dumps({"bluRayPresets": [preset]}), encoding="utf-8")
+        return write_project("bd", preset["id"], "BD-R (Calibrated)", folder=self.folder / "projects",
+                             presets_file=presets)
+
+    def test_project_has_zero_pitch_the_polarity_and_the_blu_ray_family(self):
+        doc = json.loads(self._write(self.PRESET).read_text(encoding="utf-8"))
+        self.assertEqual(doc["discFamily"], "bd")
+        self.assertEqual(doc["geometry"], {
+            "innerRadiusMm": 24.65, "outerRadiusMm": 57.7, "sectors": 12219392,
+            "pitchLinear": 0.0, "pitchQuadratic": 0.0, "pitchCubic": 0.0, "usableSectors": 12218368,
+        })
+        self.assertEqual(doc["bluRay"], {"invertMapping": True})
+        self.assertEqual(doc["outputs"]["volumeLabel"], "BD_IMAGE")
+        self.assertFalse(doc["outputs"]["writeCue"])
+
+    def test_without_a_usable_sectors_the_app_default_is_the_total_rounded_down_to_32(self):
+        preset = {k: v for k, v in self.PRESET.items() if k != "usableSectors"}
+        preset["totalSectors"] = 12219360  # a multiple of 32, one cluster short of a full layer
+        doc = json.loads(self._write(preset).read_text(encoding="utf-8"))
+        self.assertEqual(doc["geometry"]["usableSectors"], 12219360)
+
+    def test_a_preset_the_app_would_refuse_is_an_error_not_a_file_that_fails_to_open(self):
+        for bad in ({"totalSectors": 12219393}, {"totalSectors": 12219424}, {"outerRadiusMm": 60.5}):
+            with self.assertRaises(ProjectError):
+                self._write({**self.PRESET, **bad})
+        self.assertEqual(list((self.folder / "projects").glob("*.discproj")), [])
 
 
 if __name__ == "__main__":

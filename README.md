@@ -47,7 +47,7 @@ You need Windows 10 or 11 and these:
 
 Get DiscTuner in either of two ways:
 
-1. Download `DiscTuner-v2.1.1.zip` from the [latest release](https://github.com/Fireball122/DiscTuner/releases/latest) and unzip it.
+1. Download `DiscTuner-v2.2.0.zip` from the [latest release](https://github.com/Fireball122/DiscTuner/releases/latest) and unzip it.
 2. Or clone it: `git clone https://github.com/Fireball122/DiscTuner`
 
 Then, in the DiscTuner folder, double-click `setup.bat`. When it finishes, double-click `run_disctuner.bat`.
@@ -70,7 +70,7 @@ DiscTuner looks for disc-probe next to its own folder, in `Downloads`, `Document
 2. Press **Calibrate**. Don't touch the tray until it finishes.
 3. Open the project DiscTuner saved: in DiscImageStudio choose **File > Open** and pick `Documents\DiscImageStudio Projects\<disc> (<manufacturer code>, Calibrated).discproj`. Colons in the name become underscores in the file name. Then add your image.
 
-Calibrate once per spindle or batch. Running it again for the same disc type replaces that preset and project file. DiscImageStudio's previous preset file is backed up first by disc-probe. CD and DVD calibrations write a project; Blu-ray calibrations still only add a preset.
+Calibrate once per spindle or batch. Running it again for the same disc type replaces that preset and project file. DiscImageStudio's previous preset file is backed up first by disc-probe. Every calibration, CD, DVD and Blu-ray, writes a project.
 
 Burning writes a disc that can't be rewritten, and erasing wipes a rewritable one. DiscTuner asks before erasing and warns before you cancel mid-burn. You use it at your own risk.
 
@@ -93,7 +93,7 @@ The pipeline tests run against a fake disc-probe, so they need no drive.
 | Module | Role |
 | --- | --- |
 | `disctuner/calibration.py` | The pipeline: erase, pattern, burn, reload, measure, install. Emits progress events; no UI. |
-| `disctuner/project.py` | Writes the DiscImageStudio project for CD and DVD calibrations, copying the installed preset's geometry. |
+| `disctuner/project.py` | Writes the DiscImageStudio project for a calibration, copying the installed preset's geometry. |
 | `disctuner/media.py` | Supported disc types and per-family settings. |
 | `disctuner/disc.py` | Reads and parses `discprobe info` into a `DiscInfo`. |
 | `disctuner/drives.py` | Drive list, eject, close tray. |
