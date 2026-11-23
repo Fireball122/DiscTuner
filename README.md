@@ -75,7 +75,7 @@ You need Windows 10 or 11 and these:
 
 Get DiscTuner in either of two ways:
 
-1. Download `DiscTuner-v2.2.1.zip` from the [latest release](https://github.com/Fireball122/DiscTuner/releases/latest) and unzip it.
+1. Download `DiscTuner-v2.2.2.zip` from the [latest release](https://github.com/Fireball122/DiscTuner/releases/latest) and unzip it.
 2. Or clone it: `git clone https://github.com/Fireball122/DiscTuner`
 
 Then, in the DiscTuner folder, double-click `setup.bat`. When it finishes, double-click `run_disctuner.bat`.
