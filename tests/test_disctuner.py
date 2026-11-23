@@ -398,5 +398,21 @@ class BluRayProject(unittest.TestCase):
         self.assertEqual(list((self.folder / "projects").glob("*.discproj")), [])
 
 
+@unittest.skipUnless(os.name == "nt", "the Documents lookup is Windows-only")
+class DocumentsFolder(unittest.TestCase):
+    def test_matches_the_folder_windows_reports(self):
+        # DiscImageStudio takes its projects folder from Windows; OneDrive can move Documents off ~/Documents.
+        import subprocess
+
+        from disctuner.paths import dis_projects_dir, documents_dir
+
+        reported = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", "[Environment]::GetFolderPath('MyDocuments')"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        self.assertEqual(os.path.normcase(documents_dir()), os.path.normcase(reported))
+        self.assertEqual(dis_projects_dir(), documents_dir() / "DiscImageStudio Projects")
+
+
 if __name__ == "__main__":
     unittest.main()

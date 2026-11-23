@@ -2,13 +2,22 @@
 
 Calibrate a blank disc for [DiscImageStudio](https://github.com/JiaFeiMiao-K-Cat/DiscImageStudio) with one click and one disc.
 
-DiscTuner drives [disc-probe](https://github.com/Ashley-QwQ/disc-probe). It burns disc-probe's random-data test pattern, reloads the disc, measures the spiral through the drive's read timing, fits the geometry, and writes the result as a preset into DiscImageStudio's preset list. The test disc is used up; burn your pictures on the next discs from the same batch.
+DiscTuner drives [disc-probe](https://github.com/Ashley-QwQ/disc-probe). It burns disc-probe's random-data test pattern, reloads the disc, measures the spiral through the drive's read timing, fits the geometry, and gives you the result as a ready-to-open DiscImageStudio project (and as a preset in DiscImageStudio's preset file). The test disc is used up; burn your pictures on the next discs from the same batch.
 
 <img src="docs/screenshot-measuring.png" width="720" alt="DiscTuner measuring a DVD+R: the disc drawing with the burned track in amber, five steps, and the Cancel button">
 
 *The window while measuring. The amber track is the burned part of the disc; the dots along one radius are the measurement points.*
 
 DiscTuner is not affiliated with disc-probe or DiscImageStudio. It only automates their documented workflow.
+
+## Quick start
+
+1. Install Python, Git and DiscImageStudio (links in [Install](#install)). Download DiscTuner and double-click `setup.bat`.
+2. Double-click `run_disctuner.bat`, put one blank disc from your spindle in the drive, and press **Calibrate**.
+3. When it finishes, the window shows `Project saved: <path>`. In DiscImageStudio choose **File > Open** (or **Open project** on the home screen), pick that file, and import your picture.
+4. Burn your pictures on the other discs from the same spindle.
+
+This works the same for CD, DVD and Blu-ray. The details are under [Use](#use).
 
 ## Supported discs
 
@@ -32,7 +41,12 @@ Not guaranteed. The measurement reads sector timing, so the drive has to coopera
 - It must hold a constant rotation speed at some read speed. DiscTuner tries several speeds and moves on when disc-probe reports the drive turned at constant linear speed instead. A drive that never holds constant rotation fails with a clear message, after the burn.
 - Check disc-probe's list of [drives with reports](https://github.com/Ashley-QwQ/disc-probe#drives-with-hands-on-reports) before spending a disc.
 
-Tested on real hardware: one HL-DT-ST BDDVDRW UH12NS40 with a CD-R (measure and install steps) and DVD+R results from disc-probe on the same drive. Burning, erasing and Blu-ray from inside the app are covered by tests against a fake disc-probe, not by real discs. Reports are welcome.
+What has been checked:
+
+- **Real hardware:** one HL-DT-ST BDDVDRW UH12NS40, with a CD-R through DiscTuner's measure and install steps, and DVD+R results from disc-probe on the same drive. Burning, erasing and Blu-ray inside the app are covered by tests against a fake disc-probe, not by real discs.
+- **The project files:** projects written for CD, DVD and Blu-ray were opened in DiscImageStudio 1.5.0 and took an imported image without an error. The Blu-ray project was made from a test preset, not from a real Blu-ray calibration.
+
+Reports from other drives and discs are welcome, especially Blu-ray.
 
 ## Install
 
@@ -47,7 +61,7 @@ You need Windows 10 or 11 and these:
 
 Get DiscTuner in either of two ways:
 
-1. Download `DiscTuner-v2.2.0.zip` from the [latest release](https://github.com/Fireball122/DiscTuner/releases/latest) and unzip it.
+1. Download `DiscTuner-v2.2.1.zip` from the [latest release](https://github.com/Fireball122/DiscTuner/releases/latest) and unzip it.
 2. Or clone it: `git clone https://github.com/Fireball122/DiscTuner`
 
 Then, in the DiscTuner folder, double-click `setup.bat`. When it finishes, double-click `run_disctuner.bat`.
@@ -66,11 +80,14 @@ DiscTuner looks for disc-probe next to its own folder, in `Downloads`, `Document
 
 ## Use
 
-1. Put one blank disc from the spindle in the drive.
-2. Press **Calibrate**. Don't touch the tray until it finishes.
-3. Open the project DiscTuner saved: in DiscImageStudio choose **File > Open** and pick `Documents\DiscImageStudio Projects\<disc> (<manufacturer code>, Calibrated).discproj`. Colons in the name become underscores in the file name. Then add your image.
+1. Put one blank disc from the spindle in the drive. Use a disc from the batch you will burn your pictures on; the result describes that batch.
+2. Press **Calibrate** and don't touch the tray until it finishes. DiscTuner burns the test pattern, reloads the disc and measures it. A rewritable disc is erased first, after you confirm.
+3. The window ends with a line `Project saved: <path>`. The file is `<disc> (<manufacturer code>, Calibrated).discproj` in your DiscImageStudio projects folder, normally `Documents\DiscImageStudio Projects`. Colons in the name become underscores in the file name.
+4. In DiscImageStudio choose **File > Open** (or **Open project** on the home screen) and pick that file. Its disc geometry is already filled in. Import your picture, then export and burn as usual on the other discs from the batch.
 
-Calibrate once per spindle or batch. Running it again for the same disc type replaces that preset and project file. DiscImageStudio's previous preset file is backed up first by disc-probe. Every calibration, CD, DVD and Blu-ray, writes a project.
+DiscTuner also installs the calibrated preset into DiscImageStudio's preset file. In DiscImageStudio 1.5.0 it did not show up in the home screen's template list in testing, so use the project file rather than looking for the preset.
+
+Calibrate once per spindle or batch. Running it again for the same disc type replaces that preset and project file. disc-probe backs up DiscImageStudio's previous preset file first.
 
 Burning writes a disc that can't be rewritten, and erasing wipes a rewritable one. DiscTuner asks before erasing and warns before you cancel mid-burn. You use it at your own risk.
 
@@ -79,6 +96,9 @@ Burning writes a disc that can't be rewritten, and erasing wipes a rewritable on
 - **"The measurement stopped: the drive is not turning at a constant speed"** on every speed: the drive doesn't hold constant rotation for this disc type. Run `python -m discprobe timing --media <cd|dvd|bd> --drive E:` for details.
 - **"The burned disc did not come back"**: push the tray in, wait, then measure by hand with `python -m discprobe geo --drive E:`.
 - The **Log** tab shows everything disc-probe printed. Crashes are written to `%LOCALAPPDATA%\DiscTuner\crash.log`.
+- **"The preset was added, but the project file was not"**: the calibration worked but DiscTuner could not write the project, for example because the folder is read-only. The message says why. The preset is installed; fix the cause and run the calibration again for the project.
+- **No `Project saved` line**: you calibrated with DiscTuner 2.0.0 or earlier, which wrote no project. Update and calibrate again.
+- **DiscImageStudio says the project is invalid**: the project follows DiscImageStudio 1.5.0. A different version may expect something else. Open an issue and attach the `.discproj` file and the version number.
 
 ## Development
 
