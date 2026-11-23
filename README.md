@@ -17,7 +17,7 @@ DiscTuner is not affiliated with disc-probe or DiscImageStudio. It only automate
 3. When it finishes, the window shows `Project saved: <path>`. In DiscImageStudio choose **File > Open** (or **Open project** on the home screen), pick that file, and import your picture.
 4. Burn your pictures on the other discs from the same spindle.
 
-This works the same for CD, DVD and Blu-ray. The details are under [Use](#use).
+This works the same for CD, DVD and Blu-ray. The details are under [Use](#use). Read [What is not guaranteed](#what-is-not-guaranteed) before you spend a disc.
 
 ## Supported discs
 
@@ -47,6 +47,20 @@ What has been checked:
 - **The project files:** projects written for CD, DVD and Blu-ray were opened in DiscImageStudio 1.5.0 and took an imported image without an error. The Blu-ray project was made from a test preset, not from a real Blu-ray calibration.
 
 Reports from other drives and discs are welcome, especially Blu-ray.
+
+## What is not guaranteed
+
+DiscTuner is a hobby tool, provided as is, without warranty (see [LICENSE](LICENSE)). It automates other people's software and talks to your drive's firmware, so some things are outside its control:
+
+- **A calibration can fail, and the test disc is then lost.** Failures such as an unsupported drive, or a drive that never holds constant rotation, are only found after the burn. Burned discs can't be rewritten.
+- **The result is a measurement, not a promise.** It describes the disc you calibrated. A different batch, brand or burn speed can behave differently, and the image you burn afterwards can still come out imperfect. Calibrate once per batch and check your first burn.
+- **Blu-ray is experimental.** The Blu-ray steps have not been run on a real disc by the author. The inner radius is measured, the pitch is nominal, and the result may need adjusting in DiscImageStudio.
+- **DVD:** DiscTuner's own DVD burn and measure steps have not been run on a real disc by the author.
+- **Your drive may not work.** Only one drive, an HL-DT-ST BDDVDRW UH12NS40, has been used. Some drives don't expose what the measurement needs.
+- **Other software can change.** The project files follow DiscImageStudio 1.5.0 and the measurement uses disc-probe as it is today. An update to either can break DiscTuner until it is updated.
+- **The disc you put in is your responsibility.** DiscTuner erases rewritable discs only after asking, but check the disc first. The author is not liable for lost discs, lost data or damaged hardware.
+
+If something here fails for you, please [open an issue](https://github.com/Fireball122/DiscTuner/issues) with the Log tab text and your drive model. Real-disc reports are how the untested parts get tested.
 
 ## Install
 
